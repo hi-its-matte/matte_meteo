@@ -1,114 +1,66 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Meteo Dago Proxy 3 giorni</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #222;
-      color: #eee;
-      padding: 1rem;
-      max-width: 400px;
-      margin: auto;
-    }
-    input, button {
-      width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.6rem;
-      border-radius: 5px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background: #4caf50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .meteo-box {
-      background: #333;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 10px;
-    }
-    .meteo-day {
-      margin-top: 0.5rem;
-      padding: 0.7rem;
-      background: #444;
-      border-radius: 6px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meteo Proxy Deno</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 480px;
+    margin: auto;
+    padding: 1rem;
+  }
+  input, button {
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin: 0.5rem 0;
+    width: 100%;
+  }
+  .day {
+    margin-top: 1rem;
+  }
+</style>
 </head>
 <body>
-  <h1>☀️ Meteo Dago Proxy 3 giorni</h1>
-  <input type="text" id="cityInput" placeholder="Scrivi una città..." />
-  <button onclick="getWeather()">Controlla Meteo</button>
+  <h1>Meteo Proxy Deno</h1>
+  <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" />
+  <button onclick="fetchWeather()">Mostra meteo</button>
   <div id="result"></div>
 
   <script>
-    async function getWeather() {
-      const city = document.getElementById('cityInput').value.trim();
-      if (!city) {
-        alert('Scrivi una città!');
-        return;
-      }
+    const proxyUrl = "https://share-otter-21.deno.dev";
 
-      const url = `https://meteo-proxy.deno.dev/meteo?city=${encodeURIComponent(city)}`;
-      const resultEl = document.getElementById('result');
-      resultEl.innerHTML = 'Caricamento...';
+    async function fetchWeather() {
+      const city = document.getElementById("cityInput").value.trim();
+      if (!city) return alert("Inserisci una città");
 
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Città non trovata o errore API');
+        const res = await fetch(`${proxyUrl}?city=${encodeURIComponent(city)}`);
+        if (!res.ok) throw new Error("Errore nella richiesta");
 
         const data = await res.json();
 
-        if (!data.current || !data.daily) {
-          resultEl.innerHTML = 'Dati meteo non disponibili.';
+        if(data.error) {
+          alert(data.error);
           return;
         }
 
-        // Mostra meteo attuale
-        let html = `
-          <div class="meteo-box">
-            <h2>${data.timezone}</h2>
-            <p><strong>Ora:</strong> ${new Date(data.current.dt * 1000).toLocaleTimeString()}</p>
-            <p><strong>Temperatura attuale:</strong> ${data.current.temp} °C</p>
-            <p><strong>Condizioni:</strong> ${data.current.weather[0].description}</p>
-          </div>
-          <h3>Previsioni per domani e dopodomani</h3>
-        `;
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "";
 
-        for (let i = 1; i <= 2; i++) {
-          const day = data.daily[i];
-          html += `
-            <div class="meteo-day">
-              <strong>${new Date(day.dt * 1000).toLocaleDateString()}</strong><br/>
-              Giorno: ${day.temp.day} °C, Notte: ${day.temp.night} °C<br/>
-              ${day.weather[0].description}
-            </div>
-          `;
-        }
+        ["Oggi", "Domani", "Dopodomani"].forEach((label, i) => {
+          const day = data.consolidated_weather[i];
+          if(day) {
+            resultDiv.innerHTML += `
+              <div class="day">
+                <strong>${label}</strong>: ${day.weather_state_name}, ${Math.round(day.the_temp)}°C
+              </div>`;
+          }
+        });
 
-        // Mostra eventuali allerte
-        if (data.alerts && data.alerts.length > 0) {
-          html += `<h3>⚠️ Allerte Meteo</h3>`;
-          data.alerts.forEach(alert => {
-            html += `
-              <p><strong>${alert.event}</strong>: ${alert.description}</p>
-            `;
-          });
-        }
-
-        resultEl.innerHTML = html;
-
-      } catch (error) {
-        resultEl.innerHTML = '❌ Errore: ' + error.message;
+      } catch (e) {
+        alert("Errore: " + e.message);
       }
     }
   </script>
