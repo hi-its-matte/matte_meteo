@@ -1,40 +1,87 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meteo di Dago Proxy</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meteo Dago 3 giorni</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #222; color: #eee; padding: 1rem; }
+    .container { max-width: 400px; margin: auto; background: #333; padding: 1rem; border-radius: 10px; }
+    input, button { width: 100%; padding: 0.5rem; margin-top: 0.5rem; border-radius: 5px; border: none; }
+    button { background: #4CAF50; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .meteo-box { background: #444; padding: 1rem; margin-top: 1rem; border-radius: 8px; }
+    .meteo-day { margin-top: 0.5rem; padding: 0.5rem; background: #555; border-radius: 5px; }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>☀️ Meteo di Dago</h1>
+    <h1>☀️ Meteo Dago 3 giorni</h1>
     <input type="text" id="cityInput" placeholder="Scrivi una città..." />
     <button onclick="getWeather()">Controlla Meteo</button>
     <div id="result"></div>
   </div>
+
   <script>
     async function getWeather() {
-      const city = document.getElementById('cityInput').value.trim();
-      if (!city) return;
+      const city = document.getElementById("cityInput").value.trim();
+      if (!city) return alert("Scrivi una città!");
 
-      const url = `https://meteo-proxy.deno.dev/meteo?city=${encodeURIComponent(city)}`;
+      // Primo: prendi lat/lon con endpoint città
+      const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=3e4399ed9df1155fd8630c195b391b39`;
       try {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (res.ok && data.main) {
-          document.getElementById("result").innerHTML = `
-            <div class="meteo-box">
-              <h2>${data.name}</h2>
-              <p>${data.weather[0].description} 🌤️</p>
-              <p><strong>${data.main.temp}°C</strong></p>
-            </div>`;
-        } else {
+        const geoRes = await fetch(geoUrl);
+        const geoData = await geoRes.json();
+        if (!geoData.length) {
           document.getElementById("result").innerHTML = "❌ Città non trovata!";
+          return;
         }
-      } catch {
-        document.getElementById("result").innerHTML = "⚠️ Errore di rete!";
+        const { lat, lon, name } = geoData[0];
+
+        // Poi chiama One Call API proxy tramite lat/lon
+        const oneCallUrl = `https://meteo-proxy.deno.dev/onecall?lat=${lat}&lon=${lon}`;
+        const meteoRes = await fetch(oneCallUrl);
+        const meteoData = await meteoRes.json();
+
+        if (!meteoData.current) {
+          document.getElementById("result").innerHTML = "❌ Meteo non disponibile!";
+          return;
+        }
+
+        let html = `
+          <div class="meteo-box">
+            <h2>${name}</h2>
+            <p>Ora: ${new Date(meteoData.current.dt * 1000).toLocaleTimeString()}</p>
+            <p><strong>Temperatura attuale:</strong> ${meteoData.current.temp}°C</p>
+            <p><strong>Condizioni:</strong> ${meteoData.current.weather[0].description}</p>
+          </div>
+          <h3>Previsioni</h3>`;
+
+        // Mostra 2 giorni successivi
+        for (let i = 1; i <= 2; i++) {
+          const day = meteoData.daily[i];
+          const date = new Date(day.dt * 1000).toLocaleDateString();
+          html += `
+            <div class="meteo-day">
+              <strong>${date}</strong><br>
+              Giorno: ${day.temp.day}°C, Notte: ${day.temp.night}°C<br>
+              ${day.weather[0].description}
+            </div>`;
+        }
+
+        // Mostra allerta se presente
+        if (meteoData.alerts && meteoData.alerts.length > 0) {
+          html += `<h3>⚠️ Allerta Meteo</h3>`;
+          meteoData.alerts.forEach(alert => {
+            html += `<p><strong>${alert.event}</strong>: ${alert.description}</p>`;
+          });
+        }
+
+        document.getElementById("result").innerHTML = html;
+
+      } catch (e) {
+        document.getElementById("result").innerHTML = "⚠️ Errore nel recupero dati.";
       }
     }
   </script>
