@@ -3,66 +3,229 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Meteo Proxy Deno</title>
+<title>Meteo Open-Meteo</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 480px;
-    margin: auto;
-    padding: 1rem;
+  /* Reset base */
+  * {
+    box-sizing: border-box;
   }
-  input, button {
-    padding: 0.5rem;
-    font-size: 1rem;
-    margin: 0.5rem 0;
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: linear-gradient(135deg, #4e54c8, #8f94fb);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    font-size: 2.2rem;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  form {
+    display: flex;
     width: 100%;
+    max-width: 480px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255 255 255 / 0.15);
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: none;
+    font-size: 1rem;
+    background: transparent;
+    color: white;
+  }
+  input[type="text"]::placeholder {
+    color: #ddd;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    background: rgba(255 255 255 / 0.3);
+  }
+  button {
+    padding: 0 1.5rem;
+    border: none;
+    background: #6c63ff;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    border-radius: 0;
+  }
+  button:hover {
+    background: #5752d1;
+  }
+  #result {
+    width: 100%;
+    max-width: 480px;
+    flex-grow: 1;
   }
   .day {
-    margin-top: 1rem;
+    background: rgba(255 255 255 / 0.15);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: background 0.3s ease;
+  }
+  .day:hover {
+    background: rgba(255 255 255 / 0.25);
+  }
+  .day .info {
+    flex-grow: 1;
+  }
+  .day .date {
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+  .day .temp {
+    font-size: 1.5rem;
+    font-weight: 900;
+  }
+  .icon {
+    font-size: 2.5rem;
+    user-select: none;
+  }
+  footer {
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255 255 255 / 0.7);
+    text-align: center;
+    user-select: none;
+  }
+  footer a {
+    color: rgba(255 255 255 / 0.9);
+    text-decoration: underline;
+  }
+  @media (max-width: 480px) {
+    body {
+      margin: 1rem;
+      padding: 0.5rem;
+    }
+    .day {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+    .icon {
+      font-size: 3rem;
+    }
   }
 </style>
 </head>
 <body>
-  <h1>Meteo Proxy Deno</h1>
-  <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" />
-  <button onclick="fetchWeather()">Mostra meteo</button>
+  <h1>Matte Meteo</h1>
+  <form id="searchForm">
+    <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" required />
+    <button type="submit">Cerca</button>
+  </form>
   <div id="result"></div>
+  <footer>
+    Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
+    © Matteo Abate, 2025. Tutti i Diritti Riservati
+  </footer>
 
   <script>
-    const proxyUrl = "https://share-otter-21.deno.dev";
+    const form = document.getElementById('searchForm');
+    const cityInput = document.getElementById('cityInput');
+    const resultDiv = document.getElementById('result');
 
-    async function fetchWeather() {
-      const city = document.getElementById("cityInput").value.trim();
-      if (!city) return alert("Inserisci una città");
+    const weatherCodes = {
+      0: "☀️",
+      1: "🌤️",
+      2: "⛅",
+      3: "☁️",
+      45: "🌫️",
+      48: "🌫️",
+      51: "🌦️",
+      53: "🌧️",
+      55: "🌧️",
+      56: "🌧️",
+      57: "🌧️",
+      61: "🌧️",
+      63: "🌧️",
+      65: "🌧️",
+      66: "🌧️",
+      67: "🌧️",
+      71: "❄️",
+      73: "❄️",
+      75: "❄️",
+      77: "❄️",
+      80: "🌧️",
+      81: "🌧️",
+      82: "🌧️",
+      85: "❄️",
+      86: "❄️",
+      95: "⛈️",
+      96: "⛈️",
+      99: "⛈️"
+    };
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const city = cityInput.value.trim();
+      if (!city) return;
+
+      resultDiv.innerHTML = "<p>Caricamento...</p>";
 
       try {
-        const res = await fetch(`${proxyUrl}?city=${encodeURIComponent(city)}`);
-        if (!res.ok) throw new Error("Errore nella richiesta");
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+        const geoData = await geoRes.json();
+        if (!geoData.length) throw new Error("Città non trovata");
 
-        const data = await res.json();
+        const { lat, lon, display_name } = geoData[0];
 
-        if(data.error) {
-          alert(data.error);
-          return;
-        }
+        const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Europe/Rome`;
+        const meteoRes = await fetch(meteoUrl);
+        const meteoData = await meteoRes.json();
 
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = "";
+        if (!meteoData.daily) throw new Error("Dati meteo non disponibili");
 
-        ["Oggi", "Domani", "Dopodomani"].forEach((label, i) => {
-          const day = data.consolidated_weather[i];
-          if(day) {
-            resultDiv.innerHTML += `
-              <div class="day">
-                <strong>${label}</strong>: ${day.weather_state_name}, ${Math.round(day.the_temp)}°C
-              </div>`;
-          }
+        const days = meteoData.daily.time.slice(0, 3);
+        const tempsMax = meteoData.daily.temperature_2m_max.slice(0, 3);
+        const tempsMin = meteoData.daily.temperature_2m_min.slice(0, 3);
+        const weatherCodesArr = meteoData.daily.weathercode.slice(0, 3);
+
+        let html = `<h2 style="text-align:center; margin-bottom: 1rem;">Meteo per ${display_name}</h2>`;
+
+        days.forEach((day, i) => {
+          const date = new Date(day);
+          const dayName = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"][date.getDay()];
+          const icon = weatherCodes[weatherCodesArr[i]] || "❓";
+
+          html += `
+            <div class="day">
+              <div class="icon">${icon}</div>
+              <div class="info">
+                <div class="date">${dayName} - ${date.toLocaleDateString()}</div>
+                <div class="temp"><strong>Max:</strong> ${tempsMax[i]}°C, <strong>Min:</strong> ${tempsMin[i]}°C</div>
+              </div>
+            </div>
+          `;
         });
 
-      } catch (e) {
-        alert("Errore: " + e.message);
+        resultDiv.innerHTML = html;
+
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color:#f88;">Errore: ${err.message}</p>`;
       }
-    }
+    });
   </script>
 </body>
 </html>
