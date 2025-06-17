@@ -3,13 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" href="Icon.ico" type="image/x-icon" />
 <title>Matte Meteo</title>
 <style>
-  /* Reset base */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 480px;
@@ -47,9 +43,7 @@
     background: transparent;
     color: white;
   }
-  input[type="text"]::placeholder {
-    color: #ddd;
-  }
+  input[type="text"]::placeholder { color: #ddd; }
   input[type="text"]:focus {
     outline: none;
     background: rgba(255 255 255 / 0.3);
@@ -65,9 +59,7 @@
     transition: background 0.3s ease;
     border-radius: 0;
   }
-  button:hover {
-    background: #5752d1;
-  }
+  button:hover { background: #5752d1; }
   #result {
     width: 100%;
     max-width: 480px;
@@ -76,31 +68,56 @@
   .day {
     background: rgba(255 255 255 / 0.15);
     border-radius: 12px;
-    padding: 1rem 1.2rem;
+    padding: 1rem;
     margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: background 0.3s ease;
   }
-  .day:hover {
-    background: rgba(255 255 255 / 0.25);
-  }
-  .day .info {
-    flex-grow: 1;
-  }
-  .day .date {
-    font-weight: 700;
-    font-size: 1.3rem;
-  }
-  .day .temp {
-    font-size: 1.5rem;
-    font-weight: 900;
+  .day:hover { background: rgba(255 255 255 / 0.25); }
+  .day.open { background: rgba(255 255 255 / 0.35); }
+  .day .header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
   .icon {
     font-size: 2.5rem;
     user-select: none;
+  }
+  .info {
+    flex-grow: 1;
+  }
+  .date {
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+  .temp {
+    font-size: 1.5rem;
+    font-weight: 900;
+  }
+  .extra {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #dde;
+  }
+  .hourly {
+    margin-top: 1rem;
+    display: flex;
+    overflow-x: auto;
+    gap: 0.7rem;
+    padding-bottom: 0.5rem;
+  }
+  .hour-block {
+    background: rgba(255 255 255 / 0.2);
+    border-radius: 10px;
+    padding: 0.5rem;
+    min-width: 60px;
+    text-align: center;
+    font-size: 0.75rem;
+  }
+  .hour-block .icon {
+    font-size: 1.5rem;
   }
   footer {
     margin-top: auto;
@@ -115,18 +132,8 @@
     text-decoration: underline;
   }
   @media (max-width: 480px) {
-    body {
-      margin: 1rem;
-      padding: 0.5rem;
-    }
-    .day {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.4rem;
-    }
-    .icon {
-      font-size: 3rem;
-    }
+    body { margin: 1rem; padding: 0.5rem; }
+    .icon { font-size: 3rem; }
   }
 </style>
 </head>
@@ -141,42 +148,20 @@
     Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
     © Matteo Abate, 2025. Tutti i Diritti Riservati
   </footer>
-
   <script>
-    const form = document.getElementById('searchForm');
-    const cityInput = document.getElementById('cityInput');
-    const resultDiv = document.getElementById('result');
-
     const weatherCodes = {
-      0: "☀️",
-      1: "🌤️",
-      2: "⛅",
-      3: "☁️",
-      45: "🌫️",
-      48: "🌫️",
-      51: "🌦️",
-      53: "🌧️",
-      55: "🌧️",
-      56: "🌧️",
-      57: "🌧️",
-      61: "🌧️",
-      63: "🌧️",
-      65: "🌧️",
-      66: "🌧️",
-      67: "🌧️",
-      71: "❄️",
-      73: "❄️",
-      75: "❄️",
-      77: "❄️",
-      80: "🌧️",
-      81: "🌧️",
-      82: "🌧️",
-      85: "❄️",
-      86: "❄️",
-      95: "⛈️",
-      96: "⛈️",
-      99: "⛈️"
+      0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+      51:"🌦️",53:"🌧️",55:"🌧️",56:"🌧️",57:"🌧️",
+      61:"🌧️",63:"🌧️",65:"🌧️",66:"🌧️",67:"🌧️",
+      71:"❄️",73:"❄️",75:"❄️",77:"❄️",
+      80:"🌧️",81:"🌧️",82:"🌧️",
+      85:"❄️",86:"❄️",
+      95:"⛈️",96:"⛈️",99:"⛈️"
     };
+
+    const form = document.getElementById('searchForm');
+    const cityInput = document.querySelector('#cityInput');
+    const resultDiv = document.getElementById('result');
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -186,36 +171,126 @@
       resultDiv.innerHTML = "<p>Caricamento...</p>";
 
       try {
+        // Geocoding
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
         const geoData = await geoRes.json();
         if (!geoData.length) throw new Error("Città non trovata");
 
         const { lat, lon, display_name } = geoData[0];
 
-        const meteoUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Europe/Rome`;
-        const meteoRes = await fetch(meteoUrl);
+        // Meteo API url
+        const dailyParams = [
+          "weathercode",
+          "temperature_2m_max",
+          "temperature_2m_min",
+          "precipitation_sum",
+          "windspeed_10m_max"
+        ].join(",");
+
+        const hourlyParams = [
+          "temperature_2m",
+          "weathercode",
+          "precipitation",
+          "windspeed_10m",
+          "uv_index"
+        ].join(",");
+
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+          `&daily=${dailyParams}` +
+          `&hourly=${hourlyParams}` +
+          `&current_weather=true` +
+          `&timezone=Europe/Rome`;
+
+        const meteoRes = await fetch(url);
         const meteoData = await meteoRes.json();
 
         if (!meteoData.daily) throw new Error("Dati meteo non disponibili");
 
-        const days = meteoData.daily.time.slice(0, 3);
-        const tempsMax = meteoData.daily.temperature_2m_max.slice(0, 3);
-        const tempsMin = meteoData.daily.temperature_2m_min.slice(0, 3);
-        const weatherCodesArr = meteoData.daily.weathercode.slice(0, 3);
+        // Extract data
+        const daysCount = meteoData.daily.time.length;
+        // Mostro 7 giorni
+        const days = meteoData.daily.time.slice(0, 7);
+        const max = meteoData.daily.temperature_2m_max.slice(0, 7);
+        const min = meteoData.daily.temperature_2m_min.slice(0, 7);
+        const precip = meteoData.daily.precipitation_sum.slice(0, 7);
+        const wind = meteoData.daily.windspeed_10m_max.slice(0, 7);
+        const codes = meteoData.daily.weathercode.slice(0, 7);
 
-        let html = `<h2 style="text-align:center; margin-bottom: 1rem;">Meteo per ${display_name}</h2>`;
+        // hourly dati
+        const hourlyTime = meteoData.hourly.time;
+        const hourlyTemp = meteoData.hourly.temperature_2m;
+        const hourlyCode = meteoData.hourly.weathercode;
+        const hourlyPrecip = meteoData.hourly.precipitation;
+        const hourlyWind = meteoData.hourly.windspeed_10m;
+        const hourlyUV = meteoData.hourly.uv_index;
 
-        days.forEach((day, i) => {
-          const date = new Date(day);
-          const dayName = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"][date.getDay()];
-          const icon = weatherCodes[weatherCodesArr[i]] || "❓";
+        const current = meteoData.current_weather;
+
+        let html = `<h2 style='text-align:center; margin-bottom:1rem;'>Meteo per ${display_name}</h2>`;
+
+        days.forEach((d, i) => {
+          const date = new Date(d);
+          const today = new Date();
+          today.setHours(0,0,0,0);
+          const isToday = (date.getTime() === today.getTime());
+
+          // Label: oggi con data completa o giorno+data per gli altri
+          const label = isToday ? 
+            `Oggi, ${date.toLocaleDateString('it-IT', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'})}` :
+            date.toLocaleDateString('it-IT', {weekday:'long', day:'2-digit', month:'2-digit'});
+
+          const icon = weatherCodes[codes[i]] || '❓';
+
+          // Prendo dati orari di quel giorno (filtro)
+          const startDate = new Date(d);
+          const endDate = new Date(d);
+          endDate.setDate(endDate.getDate() + 1);
+
+          // Prendo tutti gli indici degli orari di quel giorno
+          const hoursIndices = [];
+          for(let h=0; h<hourlyTime.length; h++) {
+            const ht = new Date(hourlyTime[h]);
+            if(ht >= startDate && ht < endDate) hoursIndices.push(h);
+          }
+
+          // Se è oggi, aggiungo meteo attuale sotto la data
+          const currentWeatherHtml = isToday ? `
+            <div class="extra" style="margin-top: 0.3rem;">
+              <strong>Meteo ora:</strong> ${weatherCodes[current.weathercode] || '❓'}, ${current.temperature}°C, vento ${current.windspeed} km/h
+            </div>
+          ` : '';
 
           html += `
-            <div class="day">
-              <div class="icon">${icon}</div>
-              <div class="info">
-                <div class="date">${dayName} - ${date.toLocaleDateString()}</div>
-                <div class="temp"><strong>Max:</strong> ${tempsMax[i]}°C, <strong>Min:</strong> ${tempsMin[i]}°C</div>
+            <div class="day" data-day-index="${i}">
+              <div class="header">
+                <div class="icon">${icon}</div>
+                <div class="info">
+                  <div class="date">${label}</div>
+                  <div class="temp"><strong>Max:</strong> ${max[i]}°C, <strong>Min:</strong> ${min[i]}°C</div>
+                  <div class="extra"><strong>Pioggia:</strong> ${precip[i]} mm, <strong>Vento:</strong> ${wind[i]} km/h</div>
+                  ${currentWeatherHtml}
+                </div>
+              </div>
+              <div class="hourly" style="display:none;">
+                ${hoursIndices.map(hIndex => {
+                  const hourDate = new Date(hourlyTime[hIndex]);
+                  const hourLabel = hourDate.getHours().toString().padStart(2,'0') + ":00";
+                  const hourIcon = weatherCodes[hourlyCode[hIndex]] || '❓';
+                  const hourTemp = hourlyTemp[hIndex];
+                  const hourPrecip = hourlyPrecip[hIndex];
+                  const hourWind = hourlyWind[hIndex];
+                  const hourUV = hourlyUV[hIndex];
+                  return `
+                    <div class="hour-block" title="Temp: ${hourTemp}°C\nPioggia: ${hourPrecip}mm\nVento: ${hourWind} km/h\nUV: ${hourUV}">
+                      <div class="hour">${hourLabel}</div>
+                      <div class="icon">${hourIcon}</div>
+                      <div class="temp">${hourTemp}°</div>
+                      <div>🌧️${hourPrecip}</div>
+                      <div>🌬️${hourWind}</div>
+                      <div>☀️${hourUV}</div>
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -223,8 +298,17 @@
 
         resultDiv.innerHTML = html;
 
-      } catch (err) {
-        resultDiv.innerHTML = `<p style="color:#f88;">Errore: ${err.message}</p>`;
+        // Aggiungo eventi click per aprire/chiudere dettaglio orario
+        document.querySelectorAll('.day').forEach(dayEl => {
+          dayEl.addEventListener('click', () => {
+            const isOpen = dayEl.classList.toggle('open');
+            const hourlyDiv = dayEl.querySelector('.hourly');
+            if(hourlyDiv) hourlyDiv.style.display = isOpen ? 'flex' : 'none';
+          });
+        });
+
+      } catch(err) {
+        resultDiv.innerHTML = `<p style='color:#f88;'>Errore: ${err.message}</p>`;
       }
     });
   </script>
