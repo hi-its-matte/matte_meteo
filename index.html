@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
- <link rel="icon" href="icon.ico" type="image/x-icon">
-
+<link rel="icon" href="icon.ico" type="image/x-icon">
 <title>Matte Meteo</title>
 <style>
   * { box-sizing: border-box; }
@@ -19,6 +18,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
   }
   h1 {
     text-align: center;
@@ -26,6 +26,19 @@
     font-weight: 700;
     font-size: 2.2rem;
     text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  #favMenu {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+  select {
+    background: rgba(255,255,255,0.2);
+    color: #000000;
+    border: none;
+    border-radius: 8px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
   }
   form {
     display: flex;
@@ -50,16 +63,6 @@
     outline: none;
     background: rgba(255 255 255 / 0.3);
   }
-  
-.banner {
-  text-align: center;
-  margin: 1rem 0;
-}
-.banner img {
-  width: 350px;
-  height: auto;
-}
-
   button {
     padding: 0 1.5rem;
     border: none;
@@ -72,11 +75,16 @@
     border-radius: 0;
   }
   button:hover { background: #5752d1; }
-  #result {
-    width: 100%;
-    max-width: 480px;
-    flex-grow: 1;
+
+  .banner {
+    text-align: center;
+    margin: 1rem 0;
   }
+  .banner img {
+    width: 350px;
+    height: auto;
+  }
+
   .day {
     background: rgba(255 255 255 / 0.15);
     border-radius: 12px;
@@ -131,6 +139,16 @@
   .hour-block .icon {
     font-size: 1.5rem;
   }
+  .fav-star {
+    cursor: pointer;
+    font-size: 1.5rem;
+    margin-left: 0.5rem;
+    user-select: none;
+  }
+  .fav-star.saved {
+    color: gold;
+    text-shadow: 0 0 4px rgba(255,255,0,0.6);
+  }
   footer {
     margin-top: auto;
     padding: 1rem;
@@ -143,26 +161,28 @@
     color: rgba(255 255 255 / 0.9);
     text-decoration: underline;
   }
-  @media (max-width: 480px) {
-    body { margin: 1rem; padding: 0.5rem; }
-    .icon { font-size: 3rem; }
-  }
 </style>
 </head>
 <body>
+  <div id="favMenu">
+    <select id="favSelect">
+      <option value="">⭐ Preferiti</option>
+    </select>
+  </div>
   <h1>Matte Meteo</h1>
   <form id="searchForm">
     <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" required />
     <button type="submit">Cerca</button>
-   </form>
-     <div class="banner">
-  <a href="https://ariaos.netlify.app/"><img src="https://mattehost.netlify.app/img/ad.png" alt="Banner Pubblicitario" /></a>
-</div>
+  </form>
+  <div class="banner">
+    <a href="https://ariaos.netlify.app/"><img src="https://mattehost.netlify.app/img/ad.png" alt="Banner Pubblicitario" /></a>
+  </div>
   <div id="result"></div>
   <footer>
     Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
     © Matteo Abate, 2025. Tutti i Diritti Riservati
   </footer>
+
   <script>
     const weatherCodes = {
       0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
@@ -177,6 +197,25 @@
     const form = document.getElementById('searchForm');
     const cityInput = document.querySelector('#cityInput');
     const resultDiv = document.getElementById('result');
+    const favSelect = document.getElementById('favSelect');
+
+    function loadFavorites() {
+      const favs = JSON.parse(localStorage.getItem("favCities") || "[]");
+      favSelect.innerHTML = `<option value="">⭐ Preferiti</option>`;
+      favs.forEach(city => {
+        const opt = document.createElement("option");
+        opt.value = city;
+        opt.textContent = city;
+        favSelect.appendChild(opt);
+      });
+    }
+
+    favSelect.addEventListener("change", () => {
+      if (favSelect.value) {
+        cityInput.value = favSelect.value;
+        form.dispatchEvent(new Event("submit"));
+      }
+    });
 
     form.addEventListener('submit', async e => {
       e.preventDefault();
@@ -186,14 +225,12 @@
       resultDiv.innerHTML = "<p>Caricamento...</p>";
 
       try {
-        // Geocoding
         const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
         const geoData = await geoRes.json();
         if (!geoData.length) throw new Error("Città non trovata");
 
         const { lat, lon, display_name } = geoData[0];
 
-        // Meteo API url
         const dailyParams = [
           "weathercode",
           "temperature_2m_max",
@@ -211,27 +248,20 @@
         ].join(",");
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-          `&daily=${dailyParams}` +
-          `&hourly=${hourlyParams}` +
-          `&current_weather=true` +
-          `&timezone=Europe/Rome`;
+          `&daily=${dailyParams}&hourly=${hourlyParams}&current_weather=true&timezone=Europe/Rome`;
 
         const meteoRes = await fetch(url);
         const meteoData = await meteoRes.json();
-
         if (!meteoData.daily) throw new Error("Dati meteo non disponibili");
 
-        // Extract data
-        const daysCount = meteoData.daily.time.length;
-        // Mostro 7 giorni
         const days = meteoData.daily.time.slice(0, 7);
         const max = meteoData.daily.temperature_2m_max.slice(0, 7);
         const min = meteoData.daily.temperature_2m_min.slice(0, 7);
         const precip = meteoData.daily.precipitation_sum.slice(0, 7);
         const wind = meteoData.daily.windspeed_10m_max.slice(0, 7);
         const codes = meteoData.daily.weathercode.slice(0, 7);
+        const current = meteoData.current_weather;
 
-        // hourly dati
         const hourlyTime = meteoData.hourly.time;
         const hourlyTemp = meteoData.hourly.temperature_2m;
         const hourlyCode = meteoData.hourly.weathercode;
@@ -239,41 +269,35 @@
         const hourlyWind = meteoData.hourly.windspeed_10m;
         const hourlyUV = meteoData.hourly.uv_index;
 
-        const current = meteoData.current_weather;
-
-        let html = `<h2 style='text-align:center; margin-bottom:1rem;'>Meteo per ${display_name}</h2>`;
+        let html = `<h2 style='text-align:center; margin-bottom:1rem;'>Meteo per ${display_name} 
+        <span class="fav-star" id="favStar" title="Aggiungi ai preferiti">☆</span></h2>`;
 
         days.forEach((d, i) => {
           const date = new Date(d);
           const today = new Date();
-          today.setHours(0,0,0,0);
+          today.setHours(0, 0, 0, 0);
           const isToday = (date.getTime() === today.getTime());
 
-          // Label: oggi con data completa o giorno+data per gli altri
-          const label = isToday ? 
-            `Oggi, ${date.toLocaleDateString('it-IT', {weekday:'long', day:'2-digit', month:'2-digit', year:'numeric'})}` :
-            date.toLocaleDateString('it-IT', {weekday:'long', day:'2-digit', month:'2-digit'});
+          const label = isToday ?
+            `Oggi, ${date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}` :
+            date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit' });
 
           const icon = weatherCodes[codes[i]] || '❓';
 
-          // Prendo dati orari di quel giorno (filtro)
           const startDate = new Date(d);
           const endDate = new Date(d);
           endDate.setDate(endDate.getDate() + 1);
 
-          // Prendo tutti gli indici degli orari di quel giorno
           const hoursIndices = [];
-          for(let h=0; h<hourlyTime.length; h++) {
+          for (let h = 0; h < hourlyTime.length; h++) {
             const ht = new Date(hourlyTime[h]);
-            if(ht >= startDate && ht < endDate) hoursIndices.push(h);
+            if (ht >= startDate && ht < endDate) hoursIndices.push(h);
           }
 
-          // Se è oggi, aggiungo meteo attuale sotto la data
           const currentWeatherHtml = isToday ? `
             <div class="extra" style="margin-top: 0.3rem;">
               <strong>Meteo ora:</strong> ${weatherCodes[current.weathercode] || '❓'}, ${current.temperature}°C, vento ${current.windspeed} km/h
-            </div>
-          ` : '';
+            </div>` : '';
 
           html += `
             <div class="day" data-day-index="${i}">
@@ -289,43 +313,53 @@
               <div class="hourly" style="display:none;">
                 ${hoursIndices.map(hIndex => {
                   const hourDate = new Date(hourlyTime[hIndex]);
-                  const hourLabel = hourDate.getHours().toString().padStart(2,'0') + ":00";
+                  const hourLabel = hourDate.getHours().toString().padStart(2, '0') + ":00";
                   const hourIcon = weatherCodes[hourlyCode[hIndex]] || '❓';
-                  const hourTemp = hourlyTemp[hIndex];
-                  const hourPrecip = hourlyPrecip[hIndex];
-                  const hourWind = hourlyWind[hIndex];
-                  const hourUV = hourlyUV[hIndex];
                   return `
-                    <div class="hour-block" title="Temp: ${hourTemp}°C\nPioggia: ${hourPrecip}mm\nVento: ${hourWind} km/h\nUV: ${hourUV}">
+                    <div class="hour-block" title="Temp: ${hourlyTemp[hIndex]}°C\nPioggia: ${hourlyPrecip[hIndex]}mm\nVento: ${hourlyWind[hIndex]} km/h\nUV: ${hourlyUV[hIndex]}">
                       <div class="hour">${hourLabel}</div>
                       <div class="icon">${hourIcon}</div>
-                      <div class="temp">${hourTemp}°</div>
-                      <div>🌧️${hourPrecip}</div>
-                      <div>🌬️${hourWind}</div>
-                      <div>☀️${hourUV}</div>
-                    </div>
-                  `;
+                      <div class="temp">${hourlyTemp[hIndex]}°</div>
+                      <div>🌧️${hourlyPrecip[hIndex]}</div>
+                      <div>🌬️${hourlyWind[hIndex]}</div>
+                      <div>☀️${hourlyUV[hIndex]}</div>
+                    </div>`;
                 }).join('')}
               </div>
-            </div>
-          `;
+            </div>`;
         });
 
         resultDiv.innerHTML = html;
 
-        // Aggiungo eventi click per aprire/chiudere dettaglio orario
         document.querySelectorAll('.day').forEach(dayEl => {
           dayEl.addEventListener('click', () => {
             const isOpen = dayEl.classList.toggle('open');
             const hourlyDiv = dayEl.querySelector('.hourly');
-            if(hourlyDiv) hourlyDiv.style.display = isOpen ? 'flex' : 'none';
+            if (hourlyDiv) hourlyDiv.style.display = isOpen ? 'flex' : 'none';
           });
         });
 
-      } catch(err) {
-        resultDiv.innerHTML = `<p style='color:#f88;'>Errore: ${err.message}</p>`;
+        // ⭐ Preferito
+                  favStar.addEventListener("click", () => {
+            let favs = JSON.parse(localStorage.getItem("favCities") || "[]");
+            const index = favs.indexOf(city);
+            if (index === -1) {
+              favs.push(city);
+              favStar.classList.add("saved");
+            } else {
+              favs.splice(index, 1);
+              favStar.classList.remove("saved");
+            }
+            localStorage.setItem("favCities", JSON.stringify(favs));
+            loadFavorites();
+          });
+      } catch (err) {
+        resultDiv.innerHTML = `<p style="color: yellow;">Errore: ${err.message}</p>`;
       }
     });
+
+    // Carica i preferiti al primo avvio
+    loadFavorites();
   </script>
 </body>
 </html>
