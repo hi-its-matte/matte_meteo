@@ -1,420 +1,225 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="icon" href="icon.ico" type="image/x-icon">
-<title>Matte Meteo</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 480px;
-    margin: 2rem auto;
-    padding: 1rem;
-    background: linear-gradient(135deg, #4e54c8, #8f94fb);
-    color: #fff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-  }
-  h1 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    font-size: 2.2rem;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
-  #favMenu {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-  }
-  select {
-    background: rgba(255,255,255,0.2);
-    color: #000000;
-    border: none;
-    border-radius: 8px;
-    padding: 0.3rem 0.5rem;
-    font-size: 0.9rem;
-  }
-  form {
-    display: flex;
-    width: 100%;
-    max-width: 480px;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(255 255 255 / 0.15);
-  }
-  input[type="text"] {
-    flex: 1;
-    padding: 0.8rem 1rem;
-    border: none;
-    font-size: 1rem;
-    background: transparent;
-    color: white;
-  }
-  input[type="text"]::placeholder { color: #ddd; }
-  input[type="text"]:focus {
-    outline: none;
-    background: rgba(255 255 255 / 0.3);
-  }
-  button {
-    padding: 0 1.5rem;
-    border: none;
-    background: #6c63ff;
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    border-radius: 0;
-  }
-  button:hover { background: #5752d1; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matte Meteo</title>
+  <link rel="icon" href="icon.ico">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      color: #fff;
+      margin: 0;
+      padding: 1rem;
+      max-width: 500px;
 
-  .banner {
-    text-align: center;
-    margin: 1rem 0;
-  }
-  .banner img {
-    width: 350px;
-    height: auto;
-  }
-
-  .day {
-    background: rgba(255 255 255 / 0.15);
-    border-radius: 12px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: background 0.3s ease;
-  }
-  .day:hover { background: rgba(255 255 255 / 0.25); }
-  .day.open { background: rgba(255 255 255 / 0.35); }
-  .day .header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .icon {
-    font-size: 2.5rem;
-    user-select: none;
-  }
-  .info {
-    flex-grow: 1;
-  }
-  .date {
-    font-weight: 700;
-    font-size: 1.3rem;
-  }
-  .temp {
-    font-size: 1.5rem;
-    font-weight: 900;
-  }
-  .extra {
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-    color: #dde;
-  }
-  .hourly {
-    margin-top: 1rem;
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 0.7rem;
-    padding-bottom: 0.5rem;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-    touch-action: pan-x;
-  }
-  .hourly::-webkit-scrollbar {
-    height: 4px;
-  }
-  .hourly::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-  }
-  .hourly::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-  }
-  .hourly::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-  .hour-block {
-    background: rgba(255 255 255 / 0.2);
-    border-radius: 10px;
-    padding: 0.5rem;
-    min-width: 60px;
-    flex-shrink: 0;
-    text-align: center;
-    font-size: 0.75rem;
-  }
-  .hour-block .icon {
-    font-size: 1.5rem;
-  }
-  .fav-star {
-    cursor: pointer;
-    font-size: 1.5rem;
-    margin-left: 0.5rem;
-    user-select: none;
-  }
-  .fav-star.saved {
-    color: gold;
-    text-shadow: 0 0 4px rgba(255,255,0,0.6);
-  }
-  footer {
-    margin-top: auto;
-    padding: 1rem;
-    font-size: 0.9rem;
-    color: rgba(255 255 255 / 0.7);
-    text-align: center;
-    user-select: none;
-  }
-  footer a {
-    color: rgba(255 255 255 / 0.9);
-    text-decoration: underline;
-  }
-</style>
-</head>
-<body>
-  <div id="favMenu">
-    <select id="favSelect">
-      <option value="">⭐ Preferiti</option>
-    </select>
-  </div>
-  <h1>Matte Meteo</h1>
-  <form id="searchForm">
-    <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" required />
-    <button type="submit">Cerca</button>
-  </form>
-  <div class="banner">
-    <a href="https://ariaos.netlify.app/"><img src="https://mattehost.netlify.app/img/ad.png" alt="Banner Pubblicitario" /></a>
-  </div>
-  <div id="result"></div>
-  <footer>
-    Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
-    © Matteo Abate, 2025. Tutti i Diritti Riservati
-  </footer>
-
-  <script>
-    const weatherCodes = {
-      0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
-      51:"🌦️",53:"🌧️",55:"🌧️",56:"🌧️",57:"🌧️",
-      61:"🌧️",63:"🌧️",65:"🌧️",66:"🌧️",67:"🌧️",
-      71:"❄️",73:"❄️",75:"❄️",77:"❄️",
-      80:"🌧️",81:"🌧️",82:"🌧️",
-      85:"❄️",86:"❄️",
-      95:"⛈️",96:"⛈️",99:"⛈️"
-    };
-
-    const form = document.getElementById('searchForm');
-    const cityInput = document.querySelector('#cityInput');
-    const resultDiv = document.getElementById('result');
-    const favSelect = document.getElementById('favSelect');
-
-    function loadFavorites() {
-      const favs = JSON.parse(localStorage.getItem("favCities") || "[]");
-      favSelect.innerHTML = `<option value="">⭐ Preferiti</option>`;
-      favs.forEach(city => {
-        const opt = document.createElement("option");
-        opt.value = city;
-        opt.textContent = city;
-        favSelect.appendChild(opt);
-      });
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 2rem;
+      text-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+    form {
+      display: flex;
+      margin-bottom: 1rem;
+      background: rgba(255,255,255,.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    input, button {
+      border: none;
+      padding: .7rem 1rem;
+      font-size: 1rem;
+    }
+    input {
+      flex: 1;
+      background: transparent;
+      color: white;
+    }
+    input::placeholder { color: #ddd; }
+    button {
+      background: #6c63ff;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #result .day {
+      background: rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: .8rem;
+      margin-bottom: .6rem;
+      cursor: pointer;
+    }
+    .day .date { font-weight: bold; font-size: 1.1rem; }
+    .day .extra { font-size: .9rem; opacity: .8; }
+    .hourly {
+      display: none; /* ore nascoste di default */
+      margin-top: .5rem;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      gap: .4rem;
+    }
+    .hour-block {
+      background: rgba(255,255,255,.25);
+      border-radius: 6px;
+      padding: .4rem;
+      text-align: center;
+      font-size: .7rem;
+      min-width: 55px;
+    }
+    .fav-star { cursor: pointer; font-size: 1.4rem; margin-left: .5rem; }
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: .8rem;
+      opacity: .8;
+    }
+    select {
+      margin-bottom: 1rem;
+      padding: .4rem;
+      border-radius: 6px;
     }
 
-    favSelect.addEventListener("change", () => {
-      if (favSelect.value) {
-        cityInput.value = favSelect.value;
-        form.dispatchEvent(new Event("submit"));
-      }
-    });
+    /* 📱 Ottimizzazione per telefoni */
+    @media (max-width: 480px) {
+      body { padding: .5rem; }
+      h1 { font-size: 1.6rem; }
+      input, button { font-size: .9rem; padding: .6rem; }
+      .day .date { font-size: 1rem; }
+      .hour-block { font-size: .65rem; min-width: 50px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Matte Meteo</h1>
 
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const city = cityInput.value.trim();
-      if (!city) return;
+  <select id="favSelect">
+    <option value="">⭐ Preferiti</option>
+  </select>
 
-      resultDiv.innerHTML = "<p>Caricamento...</p>";
+  <form id="searchForm">
+    <input id="cityInput" type="text" placeholder="Scrivi una città..." required>
+    <button>Cerca</button>
+  </form>
 
-      try {
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
-        const geoData = await geoRes.json();
-        if (!geoData.length) throw new Error("Città non trovata");
+  <div id="result"></div>
 
-        const { lat, lon, display_name } = geoData[0];
+  <footer>
+    Alimentato da Open-Meteo & OpenStreetMap<br>
+    © Matteo Abate 2025
+  </footer>
 
-        const dailyParams = [
-          "weathercode",
-          "temperature_2m_max",
-          "temperature_2m_min",
-          "precipitation_sum",
-          "windspeed_10m_max"
-        ].join(",");
+<script>
+const weatherIcons = {
+  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+  51:"🌦️",53:"🌧️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",
+  71:"❄️",73:"❄️",75:"❄️",77:"❄️",
+  80:"🌧️",81:"🌧️",82:"🌧️",
+  95:"⛈️",96:"⛈️",99:"⛈️"
+};
 
-        const hourlyParams = [
-          "temperature_2m",
-          "weathercode",
-          "precipitation",
-          "windspeed_10m",
-          "uv_index"
-        ].join(",");
+const form = document.getElementById("searchForm");
+const cityInput = document.getElementById("cityInput");
+const resultDiv = document.getElementById("result");
+const favSelect = document.getElementById("favSelect");
 
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-          `&daily=${dailyParams}&hourly=${hourlyParams}&current_weather=true&timezone=Europe/Rome&forecast_days=7&past_days=0`;
+function loadFavorites() {
+  const favs = JSON.parse(localStorage.getItem("favs")||"[]");
+  favSelect.innerHTML = `<option value="">⭐ Preferiti</option>`;
+  favs.forEach(c => {
+    favSelect.innerHTML += `<option>${c}</option>`;
+  });
+}
+loadFavorites();
 
-        const meteoRes = await fetch(url);
-        const meteoData = await meteoRes.json();
-        if (!meteoData.daily) throw new Error("Dati meteo non disponibili");
+favSelect.addEventListener("change", () => {
+  if (favSelect.value) {
+    cityInput.value = favSelect.value;
+    form.dispatchEvent(new Event("submit"));
+  }
+});
 
-        const days = meteoData.daily.time.slice(0, 7);
-        const max = meteoData.daily.temperature_2m_max.slice(0, 7);
-        const min = meteoData.daily.temperature_2m_min.slice(0, 7);
-        const precip = meteoData.daily.precipitation_sum.slice(0, 7);
-        const wind = meteoData.daily.windspeed_10m_max.slice(0, 7);
-        const codes = meteoData.daily.weathercode.slice(0, 7);
-        const current = meteoData.current_weather;
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const city = cityInput.value.trim();
+  if (!city) return;
+  resultDiv.innerHTML = "⏳ Caricamento...";
 
-        const hourlyTime = meteoData.hourly.time;
-        const hourlyTemp = meteoData.hourly.temperature_2m;
-        const hourlyCode = meteoData.hourly.weathercode;
-        const hourlyPrecip = meteoData.hourly.precipitation;
-        const hourlyWind = meteoData.hourly.windspeed_10m;
-        const hourlyUV = meteoData.hourly.uv_index;
+  try {
+    const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
+    const g = await geo.json();
+    if (!g.length) throw new Error("Città non trovata");
+    const { lat, lon, display_name } = g[0];
 
-        let html = `<h2 style='text-align:center; margin-bottom:1rem;'>Meteo per ${display_name} 
-        <span class="fav-star" id="favStar" title="Aggiungi ai preferiti">☆</span></h2>`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max" +
+      "&hourly=temperature_2m,weathercode,precipitation,windspeed_10m,uv_index" +
+      "&current_weather=true&timezone=Europe/Rome";
+    const meteo = await fetch(url).then(r=>r.json());
 
-        days.forEach((d, i) => {
-          const date = new Date(d);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const isToday = (date.getTime() === today.getTime());
+    if (!meteo.daily) throw new Error("Nessun dato meteo");
 
-          const label = isToday ?
-            `Oggi, ${date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}${debugInfo}` :
-            date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit' });
+    let html = `<h2>${display_name}<span class="fav-star" id="favStar">☆</span></h2>`;
 
-          const icon = weatherCodes[codes[i]] || '❓';
+    meteo.daily.time.forEach((d,i) => {
+      const date = new Date(d).toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"2-digit"});
+      const icon = weatherIcons[meteo.daily.weathercode[i]]||"❓";
 
-          // FIX: Migliore gestione del filtraggio delle ore
-          const targetDate = d; // Es: "2024-01-15"
-          const hoursIndices = [];
-          
-          for (let h = 0; h < hourlyTime.length; h++) {
-            const hourTimeString = hourlyTime[h]; // Es: "2024-01-15T14:00"
-            // Confrontiamo solo la parte della data (primi 10 caratteri)
-            if (hourTimeString.substring(0, 10) === targetDate) {
-              hoursIndices.push(h);
-            }
-          }
-          
-          // Debug visivo: aggiungiamo info nel titolo del giorno se è il primo
-          let debugInfo = '';
-          if (i === 0) {
-            debugInfo = ` (${hoursIndices.length} ore: ${hoursIndices.length > 0 ? new Date(hourlyTime[hoursIndices[0]]).getHours() + ':00-' + new Date(hourlyTime[hoursIndices[hoursIndices.length-1]]).getHours() + ':00' : 'nessuna'})`;
-          }
-
-          const currentWeatherHtml = isToday ? `
-            <div class="extra" style="margin-top: 0.3rem;">
-              <strong>Meteo ora:</strong> ${weatherCodes[current.weathercode] || '❓'}, ${current.temperature}°C, vento ${current.windspeed} km/h
-            </div>` : '';
-
-          html += `
-            <div class="day" data-day-index="${i}">
-              <div class="header">
-                <div class="icon">${icon}</div>
-                <div class="info">
-                  <div class="date">${label}</div>
-                  <div class="temp"><strong>Max:</strong> ${max[i]}°C, <strong>Min:</strong> ${min[i]}°C</div>
-                  <div class="extra"><strong>Pioggia:</strong> ${precip[i]} mm, <strong>Vento:</strong> ${wind[i]} km/h</div>
-                  ${currentWeatherHtml}
-                </div>
-              </div>
-              <div class="hourly" style="display:none;">
-                ${hoursIndices.map(hIndex => {
-                  const hourDate = new Date(hourlyTime[hIndex]);
-                  const hourLabel = hourDate.getHours().toString().padStart(2, '0') + ":00";
-                  const hourIcon = weatherCodes[hourlyCode[hIndex]] || '❓';
-                  return `
-                    <div class="hour-block" title="Temp: ${hourlyTemp[hIndex]}°C\nPioggia: ${hourlyPrecip[hIndex]}mm\nVento: ${hourlyWind[hIndex]} km/h\nUV: ${hourlyUV[hIndex]}">
-                      <div class="hour">${hourLabel}</div>
-                      <div class="icon">${hourIcon}</div>
-                      <div class="temp">${hourlyTemp[hIndex]}°</div>
-                      <div>🌧️${hourlyPrecip[hIndex]}</div>
-                      <div>🌬️${hourlyWind[hIndex]}</div>
-                      <div>☀️${hourlyUV[hIndex]}</div>
-                    </div>`;
-                }).join('')}
-              </div>
+      let hourlyHTML = "";
+      for (let h=0;h<24;h++) {
+        const idx = meteo.hourly.time.findIndex(t => t === `${d}T${String(h).padStart(2,"0")}:00`);
+        if (idx>-1) {
+          hourlyHTML += `
+            <div class="hour-block">
+              <div>${String(h).padStart(2,"0")}:00</div>
+              <div>${weatherIcons[meteo.hourly.weathercode[idx]]||"❓"}</div>
+              <div>${meteo.hourly.temperature_2m[idx]}°</div>
             </div>`;
-        });
-
-        resultDiv.innerHTML = html;
-
-        document.querySelectorAll('.day').forEach(dayEl => {
-          dayEl.addEventListener('click', () => {
-            const isOpen = dayEl.classList.toggle('open');
-            const hourlyDiv = dayEl.querySelector('.hourly');
-            if (hourlyDiv) hourlyDiv.style.display = isOpen ? 'flex' : 'none';
-          });
-        });
-
-        // Impedisce lo scroll della pagina quando si scorre nelle ore
-        document.querySelectorAll('.hourly').forEach(hourlyEl => {
-          hourlyEl.addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-          });
-          
-          hourlyEl.addEventListener('touchmove', (e) => {
-            e.stopPropagation();
-          });
-          
-          hourlyEl.addEventListener('touchend', (e) => {
-            e.stopPropagation();
-          });
-        });
-
-        // ⭐ Preferito
-        const favStar = document.getElementById('favStar');
-        const favs = JSON.parse(localStorage.getItem("favCities") || "[]");
-        if (favs.includes(city)) {
-          favStar.classList.add("saved");
-          favStar.textContent = "★";
-        } else {
-          favStar.classList.remove("saved");
-          favStar.textContent = "☆";
         }
-
-        favStar.addEventListener("click", () => {
-          let favs = JSON.parse(localStorage.getItem("favCities") || "[]");
-          const index = favs.indexOf(city);
-          if (index === -1) {
-            favs.push(city);
-            favStar.classList.add("saved");
-            favStar.textContent = "★";
-          } else {
-            favs.splice(index, 1);
-            favStar.classList.remove("saved");
-            favStar.textContent = "☆";
-          }
-          localStorage.setItem("favCities", JSON.stringify(favs));
-          loadFavorites();
-        });
-      } catch (err) {
-        resultDiv.innerHTML = `<p style="color: yellow;">Errore: ${err.message}</p>`;
       }
+
+      html += `
+      <div class="day">
+        <div class="date">${icon} ${date}</div>
+        <div>🌡️ Max ${meteo.daily.temperature_2m_max[i]}° / Min ${meteo.daily.temperature_2m_min[i]}°</div>
+        <div class="extra">🌧️ ${meteo.daily.precipitation_sum[i]} mm | 💨 ${meteo.daily.windspeed_10m_max[i]} km/h</div>
+        <div class="hourly">${hourlyHTML}</div>
+      </div>`;
     });
 
-    // Carica i preferiti al primo avvio
-    loadFavorites();
-  </script>
+    resultDiv.innerHTML = html;
+
+    document.querySelectorAll(".day").forEach(d=>{
+      d.addEventListener("click",()=>{
+        const h = d.querySelector(".hourly");
+        h.style.display = (h.style.display==="flex")?"none":"flex"; // toggle visibilità ore
+      });
+    });
+
+    const favStar = document.getElementById("favStar");
+    const favs = JSON.parse(localStorage.getItem("favs")||"[]");
+    if (favs.includes(city)) favStar.textContent="⭐";
+
+    favStar.onclick = () => {
+      let favs = JSON.parse(localStorage.getItem("favs")||"[]");
+      if (favs.includes(city)) {
+        favs = favs.filter(c=>c!==city);
+        favStar.textContent="☆";
+      } else {
+        favs.push(city);
+        favStar.textContent="⭐";
+      }
+      localStorage.setItem("favs",JSON.stringify(favs));
+      loadFavorites();
+    };
+
+  } catch(err) {
+    resultDiv.innerHTML = `<p style="color:yellow">Errore: ${err.message}</p>`;
+  }
+});
+</script>
 </body>
 </html>
