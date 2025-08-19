@@ -121,20 +121,21 @@
     font-size: 0.9rem;
     color: #dde;
   }
-.hourly {
-  margin-top: 1rem;
-  display: flex;
-  overflow-x: auto;
-  gap: 0.7rem;
-  padding: 0.5rem;
-  scroll-behavior: smooth;       /* scorrimento fluido */
-  -webkit-overflow-scrolling: touch; /* supporto iOS */
-}
-
-.hour-block {
-  flex: 0 0 auto;  /* impedisce che si comprimano */
-}
-
+  .hourly {
+    margin-top: 1rem;
+    display: flex;
+    overflow-x: auto;
+    gap: 0.7rem;
+    padding-bottom: 0.5rem;
+  }
+  .hour-block {
+    background: rgba(255 255 255 / 0.2);
+    border-radius: 10px;
+    padding: 0.5rem;
+    min-width: 60px;
+    text-align: center;
+    font-size: 0.75rem;
+  }
   .hour-block .icon {
     font-size: 1.5rem;
   }
@@ -173,6 +174,9 @@
     <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" required />
     <button type="submit">Cerca</button>
   </form>
+  <div class="banner">
+    <a href="https://ariaos.netlify.app/"><img src="https://mattehost.netlify.app/img/ad.png" alt="Banner Pubblicitario" /></a>
+  </div>
   <div id="result"></div>
   <footer>
     Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
@@ -244,7 +248,7 @@
         ].join(",");
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-          `&daily=${dailyParams}&hourly=${hourlyParams}&current_weather=true&timezone=Europe/Rome`;
+          `&daily=${dailyParams}&hourly=${hourlyParams}&current_weather=true&timezone=Europe/Rome&forecast_days=7&past_days=0`;
 
         const meteoRes = await fetch(url);
         const meteoData = await meteoRes.json();
@@ -275,12 +279,12 @@
           const isToday = (date.getTime() === today.getTime());
 
           const label = isToday ?
-            `Oggi, ${date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}` :
+            `Oggi, ${date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}${debugInfo}` :
             date.toLocaleDateString('it-IT', { weekday: 'long', day: '2-digit', month: '2-digit' });
 
           const icon = weatherCodes[codes[i]] || '❓';
 
-          // FIX: Utilizziamo la stringa della data direttamente per il confronto
+          // FIX: Migliore gestione del filtraggio delle ore
           const targetDate = d; // Es: "2024-01-15"
           const hoursIndices = [];
           
@@ -290,6 +294,12 @@
             if (hourTimeString.substring(0, 10) === targetDate) {
               hoursIndices.push(h);
             }
+          }
+          
+          // Debug visivo: aggiungiamo info nel titolo del giorno se è il primo
+          let debugInfo = '';
+          if (i === 0) {
+            debugInfo = ` (${hoursIndices.length} ore: ${hoursIndices.length > 0 ? new Date(hourlyTime[hoursIndices[0]]).getHours() + ':00-' + new Date(hourlyTime[hoursIndices[hoursIndices.length-1]]).getHours() + ':00' : 'nessuna'})`;
           }
 
           const currentWeatherHtml = isToday ? `
