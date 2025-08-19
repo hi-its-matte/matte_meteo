@@ -284,14 +284,16 @@
 
           const icon = weatherCodes[codes[i]] || '❓';
 
-          const startDate = new Date(d);
-          const endDate = new Date(d);
-          endDate.setDate(endDate.getDate() + 1);
-
+          // FIX: Utilizziamo la stringa della data direttamente per il confronto
+          const targetDate = d; // Es: "2024-01-15"
           const hoursIndices = [];
+          
           for (let h = 0; h < hourlyTime.length; h++) {
-            const ht = new Date(hourlyTime[h]);
-            if (ht >= startDate && ht < endDate) hoursIndices.push(h);
+            const hourTimeString = hourlyTime[h]; // Es: "2024-01-15T14:00"
+            // Confrontiamo solo la parte della data (primi 10 caratteri)
+            if (hourTimeString.substring(0, 10) === targetDate) {
+              hoursIndices.push(h);
+            }
           }
 
           const currentWeatherHtml = isToday ? `
@@ -340,19 +342,31 @@
         });
 
         // ⭐ Preferito
-                  favStar.addEventListener("click", () => {
-            let favs = JSON.parse(localStorage.getItem("favCities") || "[]");
-            const index = favs.indexOf(city);
-            if (index === -1) {
-              favs.push(city);
-              favStar.classList.add("saved");
-            } else {
-              favs.splice(index, 1);
-              favStar.classList.remove("saved");
-            }
-            localStorage.setItem("favCities", JSON.stringify(favs));
-            loadFavorites();
-          });
+        const favStar = document.getElementById('favStar');
+        const favs = JSON.parse(localStorage.getItem("favCities") || "[]");
+        if (favs.includes(city)) {
+          favStar.classList.add("saved");
+          favStar.textContent = "★";
+        } else {
+          favStar.classList.remove("saved");
+          favStar.textContent = "☆";
+        }
+
+        favStar.addEventListener("click", () => {
+          let favs = JSON.parse(localStorage.getItem("favCities") || "[]");
+          const index = favs.indexOf(city);
+          if (index === -1) {
+            favs.push(city);
+            favStar.classList.add("saved");
+            favStar.textContent = "★";
+          } else {
+            favs.splice(index, 1);
+            favStar.classList.remove("saved");
+            favStar.textContent = "☆";
+          }
+          localStorage.setItem("favCities", JSON.stringify(favs));
+          loadFavorites();
+        });
       } catch (err) {
         resultDiv.innerHTML = `<p style="color: yellow;">Errore: ${err.message}</p>`;
       }
