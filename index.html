@@ -121,21 +121,20 @@
     font-size: 0.9rem;
     color: #dde;
   }
-  .hourly {
-    margin-top: 1rem;
-    display: flex;
-    overflow-x: auto;
-    gap: 0.7rem;
-    padding-bottom: 0.5rem;
-  }
-  .hour-block {
-    background: rgba(255 255 255 / 0.2);
-    border-radius: 10px;
-    padding: 0.5rem;
-    min-width: 60px;
-    text-align: center;
-    font-size: 0.75rem;
-  }
+.hourly {
+  margin-top: 1rem;
+  display: flex;
+  overflow-x: auto;
+  gap: 0.7rem;
+  padding: 0.5rem;
+  scroll-behavior: smooth;       /* scorrimento fluido */
+  -webkit-overflow-scrolling: touch; /* supporto iOS */
+}
+
+.hour-block {
+  flex: 0 0 auto;  /* impedisce che si comprimano */
+}
+
   .hour-block .icon {
     font-size: 1.5rem;
   }
