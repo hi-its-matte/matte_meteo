@@ -131,6 +131,7 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    touch-action: pan-x;
   }
   .hourly::-webkit-scrollbar {
     height: 4px;
@@ -363,6 +364,21 @@
             const isOpen = dayEl.classList.toggle('open');
             const hourlyDiv = dayEl.querySelector('.hourly');
             if (hourlyDiv) hourlyDiv.style.display = isOpen ? 'flex' : 'none';
+          });
+        });
+
+        // Impedisce lo scroll della pagina quando si scorre nelle ore
+        document.querySelectorAll('.hourly').forEach(hourlyEl => {
+          hourlyEl.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+          });
+          
+          hourlyEl.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+          });
+          
+          hourlyEl.addEventListener('touchend', (e) => {
+            e.stopPropagation();
           });
         });
 
