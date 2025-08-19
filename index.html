@@ -125,14 +125,33 @@
     margin-top: 1rem;
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 0.7rem;
     padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+  .hourly::-webkit-scrollbar {
+    height: 4px;
+  }
+  .hourly::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+  .hourly::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  .hourly::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
   }
   .hour-block {
     background: rgba(255 255 255 / 0.2);
     border-radius: 10px;
     padding: 0.5rem;
     min-width: 60px;
+    flex-shrink: 0;
     text-align: center;
     font-size: 0.75rem;
   }
@@ -174,7 +193,9 @@
     <input type="text" id="cityInput" placeholder="Scrivi una città (es. Milano)" required />
     <button type="submit">Cerca</button>
   </form>
-
+  <div class="banner">
+    <a href="https://ariaos.netlify.app/"><img src="https://mattehost.netlify.app/img/ad.png" alt="Banner Pubblicitario" /></a>
+  </div>
   <div id="result"></div>
   <footer>
     Alimentato da <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> e <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.<br />
