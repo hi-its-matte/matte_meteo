@@ -13,7 +13,7 @@
       margin: 0;
       padding: 1rem;
       max-width: 500px;
-
+  
       margin: auto;
     }
     h1 {
@@ -95,7 +95,6 @@
 </head>
 <body>
   <h1>Matte Meteo</h1>
-
   <select id="favSelect">
     <option value="">⭐ Preferiti</option>
   </select>
@@ -149,8 +148,9 @@ form.addEventListener("submit", async e => {
   resultDiv.innerHTML = "⏳ Caricamento...";
 
   try {
-    const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
-    const g = await geo.json();
+    const geo = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`)}`);
+    const gData = await geo.json();
+    const g = JSON.parse(gData.contents);
     if (!g.length) throw new Error("Città non trovata");
     const { lat, lon, display_name } = g[0];
 
