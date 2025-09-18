@@ -51,10 +51,10 @@
   <h3>MatteMeteo Pro [BETA]</h3>
   <div class="pro-controls">
     <input type="text" id="proCodeInput" placeholder="Codice Pro">
-    <button id="proCodeBtn">Attiva Pro</button>
-   <!---- <button id="removePro">Reset</button> --->
+    <button id="proCodeBtn">Attiva</button>
+   <!----<button id="removePro">Reset</button>-->
 
-<a href="pro.html" class="button" 
+<a href="pro.html "class="button" 
    style="margin-left:auto; 
           background:#6c63ff; 
           color:white; 
@@ -222,6 +222,9 @@ function getUVDescription(uv) {
 }
 
 // Attivazione Pro con Firebase - CORREZIONE: rimuovo .toUpperCase()
+// Aspetta che il DOM sia completamente caricato
+document.addEventListener('DOMContentLoaded', function() {
+
 proCodeBtn.addEventListener("click", async () => {
   const code = proCodeInput.value.trim(); // RIMOSSO .toUpperCase()
   console.log("Codice inserito (formato originale):", code);
@@ -483,6 +486,8 @@ if (isPro && meteo.daily.uv_index_max[i] !== undefined) {
 });
 
 console.log("Setup completato! Prova testFirebase() nella console per testare Firebase");
+
+}); // Fine DOMContentLoaded
 </script>
 
 </body>
