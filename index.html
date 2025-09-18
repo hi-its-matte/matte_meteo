@@ -51,10 +51,10 @@
   <h3>MatteMeteo Pro [BETA]</h3>
   <div class="pro-controls">
     <input type="text" id="proCodeInput" placeholder="Codice Pro">
-    <button id="proCodeBtn">Attiva</button>
-    <button id="removePro">Reset</button>
+    <button id="proCodeBtn">Attiva Pro</button>
+   <!---- <button id="removePro">Reset</button> --->
 
-<a class="button" 
+<a href="pro.html" class="button" 
    style="margin-left:auto; 
           background:#6c63ff; 
           color:white; 
@@ -221,10 +221,10 @@ function getUVDescription(uv) {
   return "Estremo 🟣";
 }
 
-// Attivazione Pro con Firebase
+// Attivazione Pro con Firebase - CORREZIONE: rimuovo .toUpperCase()
 proCodeBtn.addEventListener("click", async () => {
-  const code = proCodeInput.value.trim().toUpperCase();
-  console.log("Codice inserito:", code);
+  const code = proCodeInput.value.trim(); // RIMOSSO .toUpperCase()
+  console.log("Codice inserito (formato originale):", code);
   
   if (!code) {
     alert("❌ Inserisci un codice Pro");
