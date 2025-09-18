@@ -52,9 +52,9 @@
   <div class="pro-controls">
     <input type="text" id="proCodeInput" placeholder="Codice Pro">
     <button id="proCodeBtn">Attiva</button>
-   <!----<button id="removePro">Reset</button>-->
 
-<a href="pro.html "class="button" 
+
+<a class="button" 
    style="margin-left:auto; 
           background:#6c63ff; 
           color:white; 
@@ -291,14 +291,16 @@ proCodeBtn.addEventListener("click", async () => {
   }
 });
 
-// Rimozione Pro
-removeProBtn.addEventListener("click", () => {
-  localStorage.removeItem("pro");
-  localStorage.removeItem("proCode");
-  localStorage.removeItem("proActivatedAt");
-  isProActive();
-  alert("Pro disattivato");
-});
+// Rimozione Pro (solo se il pulsante esiste)
+if (removeProBtn) {
+  removeProBtn.addEventListener("click", () => {
+    localStorage.removeItem("pro");
+    localStorage.removeItem("proCode");
+    localStorage.removeItem("proActivatedAt");
+    isProActive();
+    alert("Pro disattivato");
+  });
+}
 
 // Carica i preferiti
 function loadFavorites() {
