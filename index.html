@@ -1,57 +1,496 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manutenzione</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #0d0d0d;
-      color: #f0f0f0;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-    .box {
-      padding: 40px;
-      border-radius: 20px;
-      background: #1a1a1a;
-      box-shadow: 0 0 20px rgba(255,255,255,0.08);
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 10px;
-    }
-    p {
-      font-size: 1.1rem;
-      opacity: 0.8;
-    }
-    .loader {
-      margin: 20px auto 0;
-      width: 40px;
-      height: 40px;
-      border: 4px solid #444;
-      border-top-color: #ffffff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matte Meteo </title>
+<link rel="icon" href="icon.ico">
+<style>
+  body { font-family: system-ui,sans-serif; background: linear-gradient(135deg,#4e54c8,#8f94fb); color:#fff; margin:0; padding:1rem; max-width:500px; margin:auto; }
+  h1{text-align:center;margin:1rem 0;font-size:2rem;text-shadow:0 2px 6px rgba(0,0,0,.3);}
+  form{display:flex;margin-bottom:1rem;background:rgba(255,255,255,.2);border-radius:10px;overflow:hidden;}
+  input, button{border:none;padding:.7rem 1rem;font-size:1rem;}
+  input{flex:1;background:transparent;color:white;}
+  input::placeholder{color:#ddd;}
+  button{background:#6c63ff;color:white;cursor:pointer;font-weight:bold;}
+  .pro-section{background:rgba(255,255,255,.15);border-radius:10px;padding:1rem;margin-bottom:1rem;}
+  .pro-section h3{margin:0 0 0.5rem 0;font-size:1.1rem;}
+  .pro-controls{display:flex;gap:0.5rem;margin-bottom:0.5rem;}
+  .pro-controls input{background:rgba(255,255,255,.3);border-radius:5px;}
+  .pro-controls button{font-size:0.9rem;padding:0.5rem 0.8rem;}
+  #proStatus{font-weight:bold;font-size:0.9rem;}
+  #result .day{background:rgba(255,255,255,.15);border-radius:10px;padding:.8rem;margin-bottom:.6rem;cursor:pointer;}
+  .day .date{font-weight:bold;font-size:1.1rem;}
+  .day .extra{font-size:.9rem;opacity:.8;}
+  .pro-feature{color:#ffd700;font-weight:bold;}
+  .hourly{display:none;margin-top:.5rem;overflow-x:auto;flex-wrap:nowrap;gap:.4rem;}
+  .hour-block{background:rgba(255,255,255,.25);border-radius:6px;padding:.4rem;text-align:center;font-size:.7rem;min-width:55px;}
+  .fav-star{cursor:pointer;font-size:1.4rem;margin-left:.5rem;}
+  footer{text-align:center;margin-top:2rem;font-size:.8rem;opacity:.8;}
+  select{margin-bottom:1rem;padding:.4rem;border-radius:6px;}
+  .upgrade-notice{background:rgba(255,215,0,.2);border:1px solid #ffd700;border-radius:8px;padding:0.8rem;margin:0.5rem 0;text-align:center;color:#ffd700;}
+  .loading{opacity:0.6;pointer-events:none;}
+  @media(max-width:480px){body{padding:.5rem;}h1{font-size:1.6rem;}input,button{font-size:.9rem;padding:.6rem;}.day .date{font-size:1rem;}.hour-block{font-size:.65rem;min-width:50px;}}
+</style>
 </head>
 <body>
-  <div class="box">
-    <h1>Stiamo facendo manutenzione</h1>
-    <p>Torna tra poco. Potrebbero essere aggiornati i termini di utilizzo e la privacy policy del progetto al termine</p>
-    <div class="loader"></div>
+
+<h1>Matte Meteo</h1>
+
+<select id="favSelect">
+  <option value="">⭐ Preferiti</option>
+</select>
+
+<form id="searchForm">
+  <input id="cityInput" type="text" placeholder="Scrivi una città..." required>
+  <button>Cerca</button>
+</form>
+
+<!-- Sezione Pro -->
+<div class="pro-section">
+  <h3>MatteMeteo Pro [BETA]</h3>
+  <div class="pro-controls">
+    <input type="text" id="proCodeInput" placeholder="Codice Pro">
+    <button id="proCodeBtn">Attiva</button>
+
+
+<a class="button" 
+   style="margin-left:auto; 
+          background:#6c63ff; 
+          color:white; 
+          font-weight:bold; 
+          padding:0.3rem 0.6rem; /* meno alto e meno largo */
+          border-radius:5px; 
+          text-decoration:none; 
+          font-size:0.9rem;"> <!-- testo leggermente più piccolo -->
+    Acquista Pro
+</a>
+
+
   </div>
+  <div id="proStatus">Pro non attivo ❌</div>
+<small>Scopri tutti i vantaggi di Pro <a href="pro.html">qui</a></small>
+
+
+
+</div>
+
+</div>
+
+<div id="result"></div>
+
+<footer>
+  <br>Alimentato da Open-Meteo & OpenStreetMap<br>
+  <br>© Matteo Abate 2025</br>
+ <br> We only accept payments trough PayPal, no other method.</br>
+ <a href="terms.html" style="color:inherit; text-decoration:none;">Termini e Condizioni</a>
+ <a href="pro.html" style="color:inherit; text-decoration:none; margin-left:1rem;">Diventa Pro</a>
+ <a href="privacy.html" style="color:inherit; text-decoration:none; margin-left:1rem;">Privacy Policy</a>
+  <div style="text-align:center; margin:1rem 0;">
+  <a href="https://ko-fi.com/mattedev" target="_blank" rel="noopener">
+    <img 
+      src="https://storage.ko-fi.com/cdn/brandasset/v2/support_me_on_kofi_badge_blue.png?_gl=1*cv5ar0*_gcl_au*MTQ0Mjg0NzcwMi4xNzU3MTY4OTEz*_ga*MjA5MzAwMDI3MC4xNzU3MTY4OTE0*_ga_M13FZ7VQ2C*czE3NTc3ODk4NTYkbzMkZzEkdDE3NTc3ODk5MDckajUzJGwwJGgw" 
+      alt="Supporta su Ko-fi" 
+      style="max-width:100px; width:100%; height:auto; cursor:pointer; border:none;"
+    >
+  </a>
+</div>
+
+</footer>
+
+<!-- Firebase SDK -->
+<script type="module">
+// Import Firebase
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyByN65Umz0o8l5eq9q09j67IpKSqOTV03M",
+  authDomain: "mattemeteo-app.firebaseapp.com",
+  databaseURL: "https://mattemeteo-app-default-rtdb.firebaseio.com",
+  projectId: "mattemeteo-app",
+  storageBucket: "mattemeteo-app.firebasestorage.app",
+  messagingSenderId: "447080518859",
+  appId: "1:447080518859:web:d8240daafc606127f1b74e"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+console.log("Firebase inizializzato!");
+
+const weatherIcons = {
+  0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+  51:"🌦️",53:"🌧️",55:"🌧️",61:"🌧️",63:"🌧️",65:"🌧️",
+  71:"❄️",73:"❄️",75:"❄️",77:"❄️",
+  80:"🌧️",81:"🌧️",82:"🌧️",
+  95:"⛈️",96:"⛈️",99:"⛈️"
+};
+
+const form = document.getElementById("searchForm");
+const cityInput = document.getElementById("cityInput");
+const resultDiv = document.getElementById("result");
+const favSelect = document.getElementById("favSelect");
+const proCodeInput = document.getElementById("proCodeInput");
+const proCodeBtn = document.getElementById("proCodeBtn");
+const removeProBtn = document.getElementById("removePro");
+const proStatus = document.getElementById("proStatus");
+
+// Firebase: Verifica se un codice esiste e può essere utilizzato
+async function checkProCode(code) {
+  try {
+    const codeRef = ref(database, `codes/${code}`);
+    const snapshot = await get(codeRef);
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log("Dati codice da Firebase:", data);
+      return {
+        exists: true,
+        maxActivations: data.maxActivations || 0,
+        usedActivations: data.usedActivations || 0,
+        canUse: (data.usedActivations || 0) < (data.maxActivations || 0)
+      };
+    } else {
+      return { exists: false, canUse: false };
+    }
+  } catch (error) {
+    console.error("Errore nella verifica codice:", error);
+    return { exists: false, canUse: false, error: error.message };
+  }
+}
+
+// Firebase: Incrementa il contatore di utilizzi
+async function useProCode(code) {
+  try {
+    const codeRef = ref(database, `codes/${code}/usedActivations`);
+    const snapshot = await get(codeRef);
+    
+    if (snapshot.exists()) {
+      const currentUsed = snapshot.val();
+      await set(codeRef, currentUsed + 1);
+      console.log(`Codice ${code} utilizzato. Nuovo conteggio:`, currentUsed + 1);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("Errore nell'aggiornamento codice:", error);
+    return false;
+  }
+}
+
+// Funzioni Pro locali
+function isProActive() {
+  const pro = localStorage.getItem("pro") === "true";
+  const proCode = localStorage.getItem("proCode");
+  const activatedAt = localStorage.getItem("proActivatedAt");
+  
+  let statusText = "Pro non attivo ❌";
+  if (pro) {
+    statusText = "Pro attivo ✅";
+    if (proCode) {
+      statusText += ` (${proCode})`;
+    }
+    if (activatedAt) {
+      const date = new Date(activatedAt).toLocaleDateString("it-IT");
+      statusText += ` dal ${date}`;
+    }
+  }
+  
+  proStatus.textContent = statusText;
+  proStatus.className = pro ? "pro-feature" : "";
+  return pro;
+}
+
+function getAQIDescription(aqi) {
+  if (aqi <= 50) return "Buona 😊";
+  if (aqi <= 100) return "Moderata 😐";
+  if (aqi <= 150) return "Sensibili 😷";
+  if (aqi <= 200) return "Malsana 😰";
+  if (aqi <= 300) return "Molto Malsana 🚨";
+  return "Pericolosa ☠️";
+}
+
+function getUVDescription(uv) {
+  if (uv <= 2) return "Basso 🟢";
+  if (uv <= 5) return "Moderato 🟡";
+  if (uv <= 7) return "Alto 🟠";
+  if (uv <= 10) return "Molto Alto 🔴";
+  return "Estremo 🟣";
+}
+
+// Attivazione Pro con Firebase - CORREZIONE: rimuovo .toUpperCase()
+// Aspetta che il DOM sia completamente caricato
+document.addEventListener('DOMContentLoaded', function() {
+
+proCodeBtn.addEventListener("click", async () => {
+  const code = proCodeInput.value.trim(); // RIMOSSO .toUpperCase()
+  console.log("Codice inserito (formato originale):", code);
+  
+  if (!code) {
+    alert("❌ Inserisci un codice Pro");
+    return;
+  }
+
+  // Mostra loading
+  proCodeBtn.textContent = "Verifica...";
+  proCodeBtn.classList.add("loading");
+  
+  try {
+    const codeCheck = await checkProCode(code);
+    
+    if (codeCheck.error) {
+      alert(`❌ Errore di connessione: ${codeCheck.error}`);
+      return;
+    }
+    
+    if (!codeCheck.exists) {
+      alert("❌ Codice Pro non valido");
+      return;
+    }
+    
+    if (!codeCheck.canUse) {
+      const remaining = codeCheck.maxActivations - codeCheck.usedActivations;
+      alert(`❌ Codice esaurito\nUtilizzate: ${codeCheck.usedActivations}/${codeCheck.maxActivations}`);
+      return;
+    }
+    
+    // Attiva Pro e aggiorna Firebase
+    const updateSuccess = await useProCode(code);
+    
+    if (updateSuccess) {
+      localStorage.setItem("pro", "true");
+      localStorage.setItem("proCode", code);
+      localStorage.setItem("proActivatedAt", new Date().toISOString());
+      
+      proCodeInput.value = "";
+      isProActive();
+      
+      const remaining = codeCheck.maxActivations - codeCheck.usedActivations - 1;
+      let message = `🎉 Pro attivato con successo!`;
+      if (remaining > 0) {
+        message += `\n⚡ Attivazioni rimanenti per questo codice: ${remaining}`;
+      } else {
+        message += `\n✨ Ultima attivazione per questo codice`;
+      }
+      
+      alert(message);
+    } else {
+      alert("❌ Errore nell'attivazione. Riprova.");
+    }
+    
+  } catch (error) {
+    console.error("Errore:", error);
+    alert(`❌ Errore: ${error.message}`);
+  } finally {
+    // Ripristina il pulsante
+    proCodeBtn.textContent = "Attiva";
+    proCodeBtn.classList.remove("loading");
+  }
+});
+
+// Rimozione Pro (solo se il pulsante esiste)
+if (removeProBtn) {
+  removeProBtn.addEventListener("click", () => {
+    localStorage.removeItem("pro");
+    localStorage.removeItem("proCode");
+    localStorage.removeItem("proActivatedAt");
+    isProActive();
+    alert("Pro disattivato");
+  });
+}
+
+// Carica i preferiti
+function loadFavorites() {
+  const favs = JSON.parse(localStorage.getItem("favs") || "[]");
+  favSelect.innerHTML = `<option value="">⭐ Preferiti</option>`;
+  favs.forEach(c => {
+    favSelect.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+}
+
+// Gestione preferiti dropdown
+favSelect.addEventListener("change", () => {
+  if(favSelect.value){
+    cityInput.value = favSelect.value;
+    form.dispatchEvent(new Event("submit"));
+    favSelect.value = "";
+  }
+});
+
+// Inizializzazione
+loadFavorites();
+isProActive();
+
+// Funzione di test per Firebase
+window.testFirebase = async function() {
+  console.log("Testing Firebase connection...");
+  try {
+    const testRef = ref(database, 'codes');
+    const snapshot = await get(testRef);
+    if (snapshot.exists()) {
+      console.log("Codici disponibili:", snapshot.val());
+      alert("✅ Connessione Firebase OK\nControlla la console per i dettagli");
+    } else {
+      console.log("Nessun codice trovato");
+      alert("⚠️ Connesso ma nessun codice trovato");
+    }
+  } catch (error) {
+    console.error("Errore Firebase:", error);
+    alert(`❌ Errore Firebase: ${error.message}`);
+  }
+};
+
+// Submit form
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const city = cityInput.value.trim();
+  if(!city) return;
+  resultDiv.innerHTML = "⏳ Caricamento...";
+
+  try{
+    // Geocoding
+    const geoResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://nominatim.openstreetmap.org/search?format=json&q=${city}&limit=1`)}`);
+    const geoData = await geoResponse.json();
+    const geoResults = JSON.parse(geoData.contents);
+    
+    if(!geoResults.length) throw new Error("Città non trovata");
+    
+    const {lat, lon, display_name} = geoResults[0];
+    const isPro = isProActive();
+
+    // Meteo principale
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`+
+      "&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,uv_index_max"+
+      "&hourly=temperature_2m,weathercode,precipitation,windspeed_10m,uv_index"+
+      "&current_weather=true&timezone=Europe/Rome";
+    
+    const weatherResponse = await fetch(weatherUrl);
+    if (!weatherResponse.ok) throw new Error("Errore nel recupero dati meteo");
+    const meteo = await weatherResponse.json();
+    
+    if(!meteo.daily) throw new Error("Nessun dato meteo disponibile");
+
+    // Qualità aria (solo se Pro)
+    let aqiData = null;
+    if (isPro) {
+      try {
+        const aqiResponse = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi&timezone=Europe/Rome`);
+        if (aqiResponse.ok) {
+          aqiData = await aqiResponse.json();
+        }
+      } catch (error) {
+        console.warn("Errore nel caricamento dati AQI:", error);
+      }
+    }
+
+    // Costruzione HTML
+    let html = `<h2>${display_name.split(',')[0]}<span class="fav-star" id="favStar">☆</span></h2>`;
+    
+    // AQI (solo Pro)
+    if (isPro && aqiData && aqiData.current && aqiData.current.us_aqi !== undefined) {
+      const aqi = Math.round(aqiData.current.us_aqi);
+      const aqiDesc = getAQIDescription(aqi);
+      html += `<div class="extra pro-feature">🌫️ Qualità Aria: ${aqi} (${aqiDesc})</div>`;
+    } else if (!isPro) {
+      html += `<div class="upgrade-notice">🔒 Qualità dell'aria e indice uv disponibili solo con Pro</div>`;
+    }
+
+    // Previsioni giornaliere
+    meteo.daily.time.forEach((d, i) => {
+      const date = new Date(d + 'T12:00:00');
+      const dateStr = date.toLocaleDateString("it-IT", {weekday: "long", day: "2-digit", month: "2-digit"});
+      const icon = weatherIcons[meteo.daily.weathercode[i]] || "❓";
+      
+      // UV Index (solo Pro)
+let uvInfo = "";
+if (isPro && meteo.daily.uv_index_max[i] !== undefined) {
+  const uv = Math.round(meteo.daily.uv_index_max[i]);
+  const uvDesc = getUVDescription(uv);
+  uvInfo = ` | <span class="pro-feature">☀️ UV: ${uv} (${uvDesc})</span>`;
+} else if (!isPro) {
+  uvInfo = ` | <a href="pro.html" style="opacity:0.5; text-decoration:none; color:inherit;">
+               ☀️ UV: 🔒 Pro
+             </a>`;
+}
+
+
+      // Dettaglio orario
+      let hourlyHTML = "";
+      for(let h = 0; h < 24; h += 3) {
+        const timeStr = `${d}T${String(h).padStart(2, "0")}:00`;
+        const idx = meteo.hourly.time.findIndex(t => t === timeStr);
+        if(idx > -1) {
+          const temp = Math.round(meteo.hourly.temperature_2m[idx]);
+          const hourIcon = weatherIcons[meteo.hourly.weathercode[idx]] || "❓";
+          const precip = meteo.hourly.precipitation[idx] || 0;
+          
+          hourlyHTML += `
+            <div class="hour-block">
+              <div>${String(h).padStart(2, "0")}:00</div>
+              <div>${hourIcon}</div>
+              <div>${temp}°</div>
+              ${precip > 0 ? `<div style="font-size:0.6rem">${precip}mm</div>` : ''}
+            </div>`;
+        }
+      }
+
+      html += `
+      <div class="day">
+        <div class="date">${icon} ${dateStr}</div>
+        <div>🌡️ Max ${Math.round(meteo.daily.temperature_2m_max[i])}° / Min ${Math.round(meteo.daily.temperature_2m_min[i])}°</div>
+        <div class="extra">🌧️ ${meteo.daily.precipitation_sum[i] || 0} mm | 💨 ${Math.round(meteo.daily.windspeed_10m_max[i])} km/h${uvInfo}</div>
+        <div class="hourly" style="display:flex;">${hourlyHTML}</div>
+      </div>`;
+    });
+
+    resultDiv.innerHTML = html;
+
+    // Toggle dettaglio orario
+    document.querySelectorAll(".day").forEach(dayEl => {
+      dayEl.addEventListener("click", () => {
+        const hourly = dayEl.querySelector(".hourly");
+        if (hourly) {
+          hourly.style.display = hourly.style.display === "none" ? "flex" : "none";
+        }
+      });
+    });
+
+    // Gestione stelle preferiti
+    const favStar = document.getElementById("favStar");
+    let favs = JSON.parse(localStorage.getItem("favs") || "[]");
+    if(favs.includes(city)) {
+      favStar.textContent = "⭐";
+    }
+    
+    favStar.onclick = () => {
+      let favs = JSON.parse(localStorage.getItem("favs") || "[]");
+      if(favs.includes(city)) {
+        favs = favs.filter(c => c !== city);
+        favStar.textContent = "☆";
+      } else {
+        favs.push(city);
+        favStar.textContent = "⭐";
+      }
+      localStorage.setItem("favs", JSON.stringify(favs));
+      loadFavorites();
+    };
+
+  } catch(err) {
+    console.error("Errore:", err);
+    resultDiv.innerHTML = `<div style="background:rgba(255,0,0,0.2);padding:1rem;border-radius:8px;color:#ffcccb;">
+      <strong>❌ Errore:</strong> ${err.message}<br>
+      <small>Riprova tra qualche istante</small>
+    </div>`;
+  }
+});
+
+console.log("Setup completato! Prova testFirebase() nella console per testare Firebase");
+
+}); // Fine DOMContentLoaded
+</script>
+
 </body>
 </html>
